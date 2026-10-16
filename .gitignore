@@ -17,3 +17,6 @@ __pycache__/
 *.pth
 *.engine
 logs/
+
+.idea
+output_view.png
