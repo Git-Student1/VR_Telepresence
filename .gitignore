@@ -20,3 +20,5 @@ logs/
 
 .idea
 output_view.png
+venv
+.venv

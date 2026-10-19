@@ -4,6 +4,7 @@ import argparse
 
 import numpy as np
 import torch
+from pytorch360convert import e2p
 from torchvision import transforms
 from torchvision.utils import save_image
 from PIL import Image
@@ -12,9 +13,13 @@ import parameters as params
 from models.pvsnet_model import PVSNet
 import helperFunctions as helper
 from predict_view import getPositionVector
-
+import pytorch360convert
 
 class Telepresence:
+    height = 256
+    width = 256
+
+
     def findCap(self):
         # Establish a connection to the webcam
         for i in range(10):
@@ -26,6 +31,19 @@ class Telepresence:
         print("Failed to find camera.")
         return None
 
+    def extract_viewport(self, frame):
+        viewport = e2p(
+            frame,
+            fov_deg=(90, 60), #horizontal, vertical
+            h_deg=0,  # Yaw: center
+            v_deg=0,  # Pitch: center
+            out_hw=(height, width),
+            mode="bilinear",
+        )
+        return viewport
+
+
+
     def create_parallax_with_cam(self,  args, pose_dims ):
         cap = self.findCap()
 
@@ -33,25 +51,12 @@ class Telepresence:
             raise RuntimeError(
                 "Could not find camera, check access of the system to the camera. You need to run this on a Linux subsystem. Run 'ls /dev/video*'. If here is no such directory, there is no camera available to Linux. If you run this project in a Linux subsystem, the subsystem may have no access to the camera.")
 
-        # Discard the beginning, as there will be a lot of error messages will be given into the console in some linux environments during that.
-        # Without triggering it early the key_hints would not be visible/findable into the console
-        cv2.waitKey(10)
-        ret, frame = cap.read()
-        frame = frame[120:120 + 250, 200:200 + 250, :]
-        cv2.imshow("", frame)
-
-
-
         theta = 0
         radius = 0.06
 
-
-
-
-
         while cap.isOpened():
             ret, frame = cap.read()
-            frame = frame[120:120 + 256, 200:200 + 256, :]
+            frame = frame[120:120 + height, 200:200 + width, :]
             # create example positions
             x = radius * np.cos(theta)
             y = radius * np.sin(theta)
@@ -121,9 +126,6 @@ if __name__ == "__main__":
                         help="Model checkpoint path")
     parser.add_argument("--dataset", type=str, choices=["blender", "coco"], default="coco",
                         help="Dataset type to determine pose dimensions (blender=3, coco=6)")
-    parser.add_argument("--x", type=float, default=0.0, help="Translation X")
-    parser.add_argument("--y", type=float, default=0.0, help="Translation Y")
-    parser.add_argument("--z", type=float, default=0.0, help="Translation Z")
     parser.add_argument("--pitch", type=float, default=0.0, help="Rotation Pitch (only for COCO)")
     parser.add_argument("--yaw", type=float, default=0.0, help="Rotation Yaw (only for COCO)")
     parser.add_argument("--roll", type=float, default=0.0, help="Rotation Roll (only for COCO)")
