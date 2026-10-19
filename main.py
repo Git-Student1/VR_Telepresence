@@ -66,7 +66,10 @@ class Telepresence:
             pos = {
                 "x":x,
                 "y":y,
-                "z":0
+                "z":0,
+                "pitch":0,
+                "yaw":0,
+                "roll":0
             }
             frame = self.create_parallax( frame, args, pos, pose_dims)
 
@@ -96,12 +99,10 @@ class Telepresence:
             Image.fromarray(frame_rgb)
         ).unsqueeze(0).to(params.DEVICE)
 
-        pos = getPositionVector(pos["x"], pos["y"], pos["z"], args.pitch, args.yaw, args.roll, pose_dims=pose_dims).unsqueeze(
+        pos = getPositionVector(pos["x"], pos["y"], pos["z"], pos["pitch"], pos["yaw"], pos["roll"], pose_dims=pose_dims).unsqueeze(
             0).to(params.DEVICE)
 
         # Inference
-        print(
-            f"Status: Generating view for Pose (x={args.x}, y={args.y}, z={args.z}, pitch={args.pitch}, yaw={args.yaw}, roll={args.roll})...")
         with torch.no_grad():
             predicted_img = model(img_input, pos)
             predicted_img = torch.clamp(predicted_img, 0, 1)
@@ -120,15 +121,11 @@ class Telepresence:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Predict a single novel view using PVSNet")
-    parser.add_argument("--image", type=str, required=True, help="Input image path")
     parser.add_argument("--output", type=str, default="output_view.png", help="Output image path")
     parser.add_argument("--checkpoint", type=str, default="./checkpoint/checkpoint_coco_pvsnet_lite_256x256.pth",
                         help="Model checkpoint path")
     parser.add_argument("--dataset", type=str, choices=["blender", "coco"], default="coco",
                         help="Dataset type to determine pose dimensions (blender=3, coco=6)")
-    parser.add_argument("--pitch", type=float, default=0.0, help="Rotation Pitch (only for COCO)")
-    parser.add_argument("--yaw", type=float, default=0.0, help="Rotation Yaw (only for COCO)")
-    parser.add_argument("--roll", type=float, default=0.0, help="Rotation Roll (only for COCO)")
 
     args = parser.parse_args()
 
@@ -156,4 +153,4 @@ if __name__ == "__main__":
 
 
 ## start with
-# python main.py --image C:\Users\Maxim\Downloads\images.jpg --dataset coco --checkpoint ./checkpoint/checkpoint_coco_pvsnet_lite_256x256.pth
+# python main.py --dataset coco --checkpoint ./checkpoint/checkpoint_coco_pvsnet_lite_256x256.pth
