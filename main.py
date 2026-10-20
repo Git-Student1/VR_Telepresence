@@ -154,3 +154,8 @@ if __name__ == "__main__":
 
 ## start with
 # python main.py --dataset coco --checkpoint ./checkpoint/checkpoint_coco_pvsnet_lite_256x256.pth
+
+
+# Dependencies
+# python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+# pip install gradio , opencv-python, random-fourier-features-pytorch, pytorch360connect
